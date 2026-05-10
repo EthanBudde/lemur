@@ -4,10 +4,10 @@ open source, low-overhead GPS bike computer built on adafruit sense nRF microcon
 
 # component list
 	current functionality reccomends...
-		- 1x Adafruit sense nRF##### microcontroller
-		- 1x GT-U7 NEO-6M GPS sensor
-			- 1x associated antenna
-		- - gfx output device
+		1x Adafruit sense nRF##### microcontroller
+		1x GT-U7 NEO-6M GPS sensor
+			1x associated antenna
+		gfx output device
 
 # gfx output
 	device (will) support a range of visual output devices
