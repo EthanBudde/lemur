@@ -18,26 +18,26 @@ if (SetCheckSum(pubx40, sizeof(pubx40))) {
 }
 
 bool SetCheckSum(unsigned char *pPacket, int bufferSize){
-bool bResult=false;
+  bool bResult=false;
 
-//packet sent with five extra spaces -and- without an asterick 0x26 CR_A CR_B 0x0d 0x0a
-int iSize=strlen(pPacket);
-if ((iSize+5)<=bufferSize){
-  //do not include $
-  int iChecksum = 0;
-  for (int x=1;x<iSize;x++){
-    iChecksum = iChecksum ^ (byte)pPacket[x]; //xor
+  //packet sent with five extra spaces -and- without an asterick 0x26 CR_A CR_B 0x0d 0x0a
+  int iSize=strlen(pPacket);
+  if ((iSize+5)<=bufferSize){
+    //do not include $
+    int iChecksum = 0;
+    for (int x=1;x<iSize;x++){
+      iChecksum = iChecksum ^ (byte)pPacket[x]; //xor
+    }
+    char Calc[3];
+    sprintf(Calc,"%02X",iChecksum);
+    pPacket[iSize]='*';
+    pPacket[iSize+1]=Calc[0];
+    pPacket[iSize+2]=Calc[1];
+    pPacket[iSize+3]=0x0D;
+    pPacket[iSize+4]=0x0A;
+   bResult=true;
   }
-  char Calc[3];
-  sprintf(Calc,"%02X",iChecksum);
-  pPacket[iSize]='*';
-  pPacket[iSize+1]=Calc[0];
-  pPacket[iSize+2]=Calc[1];
-  pPacket[iSize+3]=0x0D;
-  pPacket[iSize+4]=0x0A;
-  bResult=true;
-  }
-return bResult;
+  return bResult;
 }
 
 bool CheckSum(String sPacket){
