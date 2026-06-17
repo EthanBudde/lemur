@@ -12,10 +12,30 @@
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
+#define MENUSCALE 2 
+
 #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
-#define SCREEN_ADDRESS 0x3D ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
+#define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+#define BUTTON1 14
+#define BUTTON2 15
+
+int lastButtonReading[2];
+int stableButtonState[2] = {1, 1};
+unsigned long lastDebounceTime = 0;
+const unsigned long debounceDelay = 50;
+int reading[2];
+
+struct menuRoutine{
+  void *routine;
+  String menuText;
+};
+
+int fib = 1;
+int n = 0;
+int light[5] = {15,14,13,11,7};
+  
 #define LOGO_HEIGHT   16
 #define LOGO_WIDTH    16
 static const unsigned char PROGMEM logo_bmp[] =
@@ -58,6 +78,9 @@ static const unsigned char PROGMEM lemur_logo[] =
 void setup() {
   Serial.begin(9600);
 
+  pinMode(BUTTON1, INPUT_PULLUP);
+  pinMode(BUTTON2, INPUT_PULLUP);
+
   // Wait for display
   delay(500);
 
@@ -74,9 +97,6 @@ void setup() {
 
   // Clear the buffer
   display.clearDisplay();
-
-  testdrawchar();      // Draw characters of the default font
-
   testdrawbitmap();    // Draw a small bitmap image
 
   // Invert and restore display, pausing in-between
@@ -86,17 +106,118 @@ void setup() {
   delay(1000);
 }
 
+
+
 void loop() {
+  display.clearDisplay();
+
+  fib = fib+fib;
+  
+  if(fib>10000000){
+    fib =1;
+  }
+  readButton(BUTTON1, 1);
+  readButton(BUTTON2, 2);
+
+  String top = "testing!";
+  String bt1 = String(rand());
+  String bt2 = String(fib);
+  String bot = String(millis());
+  
+  setframe(light[n], top, bt1, bt2, bot);
+  
+  display.display();
+  delay(50);
 }
 
+void readButton(int pin, int work){
+  reading[work] = digitalRead(pin);
+  /*
+  Serial.print("button"); Serial.print(work); Serial.print(":");  
+  Serial.println(reading[work]);
+  
+  Serial.print("lastrd"); Serial.print(work); Serial.print(":");  
+  Serial.println(lastButtonReading[work]);
+
+  Serial.print("stable"); Serial.print(work); Serial.print(":");  
+  Serial.println(stableButtonState[work]);
+  //bottom comments here
+
+  if (reading[work] != lastButtonReading[work]) {
+    lastDebounceTime = millis();
+  }
+  */
+  
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (reading[work] != stableButtonState[work]) {
+      stableButtonState[work] = reading[work];
+
+      if (stableButtonState[work] == LOW) {
+        switch(pin){
+          case(BUTTON1):
+              n+=1;
+              if(n==5){
+                n=0;
+              }
+            break;
+          case(BUTTON2):
+            
+            break;
+          default:
+            Serial.println("undefined button input detected.");
+            break;
+        }
+      } 
+    }
+  }
+
+  lastButtonReading[work] = reading[work];	
+}
+
+
+String buttonPrint(int pin){
+	int value = digitalRead(pin);
+	String prefix = String(pin);
+	String worker = (value) ? "off" : "on" ;
+	String print = prefix+","+worker;
+	return print;
+}
+
+
+// TODO:ARBITRARY FRAME SIZES
+//    NEED FRAME SIZE, SCROLLING TO ACCOUNT
+//    AUTORETURN TO TOP
+
+void setframe(byte select, String upper, String midUpper, String midLower, String lower){	
+	int light[3];
+  for (int i = 3; i >= 0; i--){
+    light[i] = bitRead(select, i);
+  }
+  
+  arbPrint(MENUSCALE, light[0], 0, 0, upper);
+	arbPrint(MENUSCALE, light[1], 0, 16, midUpper);
+	arbPrint(MENUSCALE, light[2], 0, 32, midLower);
+	arbPrint(MENUSCALE, light[3], 0, 48, lower);
+}
+
+void arbPrint(int scale, int color, int x, int y, String text){
+  display.setTextSize(scale);         
+  if(color == 0){
+    display.setTextColor(0,1);
+  }else if(color == 1){
+    display.setTextColor(1);
+  }
+  display.setCursor(x,y);             
+  display.println(text);
+}
 
 void testdrawchar(void) {
   display.clearDisplay();
 
   display.setTextSize(1);      // Normal 1:1 pixel scale
-  display.setTextColor(SSD1306_WHITE); // Draw white text
+  display.setTextColor(1);    // Draw white text
   display.setCursor(0, 0);     // Start at top-left corner
-  display.cp437(true);         // Use full 256 char 'Code Page 437' font
+  //display.cp437(true);         // Use full 256 char 'Code Page 437' font
 
   // Not all the characters will fit on the display. This is normal.
   // Library will draw what it can and the rest will be clipped.
@@ -109,25 +230,13 @@ void testdrawchar(void) {
   delay(2000);
 }
 
-void arbPrint(int scale, int x, int y, String text){
-  if(scale != 1 || scale != 2){
-    // error something
-    scale = 1;
-  }
-  display.clearDisplay();
-  display.setTextSize(scale);         
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(x,y);             
-  display.println(text);
-}
-
 void testdrawbitmap(void) {
   display.clearDisplay();
 
   display.drawBitmap(
     (display.width()  - LOGO_WIDTH ) / 2,
     (display.height() - LOGO_HEIGHT) / 2,
-    logo_bmp, LOGO_WIDTH, LOGO_HEIGHT, 1);
+    lemur_logo, LOGO_WIDTH, LOGO_HEIGHT, 1);
   display.display();
   delay(1000);
 }
