@@ -1,0 +1,52 @@
+
+
+
+// global table of actions
+// used for high level lookup of menu actions
+callID{
+	(0, menuing.globalExit());
+	(1, menuing.gpsReset());
+	...
+	(n, your.menuFunction());
+};
+
+
+
+menu.cfg---------------
+
+{
+(menuLiteral1;callID_index)
+(menuLiteral2;callID2_index)
+(submenuLiteral)
+	{
+	(submenuLiteral1;callID_index)
+	(submenuLiteral2;callID_index)
+	}		
+(menuLiteral3;callID_index)
+}
+---------------------eof
+
+
+
+scans menu.config to build global menu structure
+	menu.config explicitly references callID table 
+		static at runtime
+		if a routine isn't here, that menu element doesn't work
+
+values get organized into menuElements
+	menuRoutine, routineIdx, menuLiteral, menuID all derived from callID table 
+		menuRoutine pointed to from callID table
+		routineIdx listed in callID table and menu.cfg 
+			menu.cfg uses index to ID routine in callID table
+		menuLiteral from menu.cfg
+		absolute menuID derived and given structurally
+			64bit number corresponding to absolute position in
+			so called "menu tree"	
+
+	
+global menu structure is some construct of menuCells
+
+menuCells point to their current menuElement, as well as the 
+	the next and previous cells in that layer of the menu
+	the first element of a sub-menu, if this is a sub-menu selection
+

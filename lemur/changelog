@@ -1,0 +1,10 @@
+lemur changelog
+
+06-18-26 inital commit with changelog 
+	not first commit, but first to notate changes
+	file currently drives basic test sketch
+		draws four fields of text (style of our basic menuing)
+		button 1 cycles through the options with highlighting
+		some basic extra logic for advanced menuing
+			more menuing text available in docs/menuing
+
